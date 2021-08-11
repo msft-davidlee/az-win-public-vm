@@ -1,0 +1,57 @@
+on: 
+  push:
+  workflow_dispatch:
+    inputs:
+      environmentselector:
+        description: 'Environment selector'     
+        required: false
+        default: 'default'
+
+jobs:
+  setup:
+    name: Choose Secrets Environment Job
+    runs-on: windows-latest
+    steps:
+      - id: setup
+        name: Setup Environment Setp
+        run: |
+          $envSelector = "${{ github.event.inputs.environmentselector }}"
+          Write-Host "Environment Selector: $envSelector Branch ${{ github.ref }}"
+          if ($envSelector -eq '' -or $envSelector -eq 'default') {            
+            if ('${{ github.ref }}' -eq 'refs/heads/main') { 
+              echo "::set-output name=build_env::prod"
+              echo "::set-output name=skip_functional_test::true" 
+            } else {
+              echo "::set-output name=build_env::dev"
+              echo "::set-output name=skip_functional_test::false" 
+            }
+          } else {
+            echo "::set-output name=build_env::$envSelector"
+            echo "::set-output name=skip_functional_test::true" 
+          }
+    outputs:
+      build_env: ${{ steps.setup.outputs.build_env }}
+      skip_functional_test: ${{ steps.setup.outputs.skip_functional_test }}
+
+  build_deploy:
+    name: Build, Deploy Environment Job
+    needs: setup
+    environment: ${{ needs.setup.outputs.build_env }}
+    runs-on: windows-latest
+    steps:    
+      - uses: actions/checkout@v2
+  
+      - name: Azure CLI Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+
+      - id: buid-and-deploy
+        name: Build Azure environment
+        run: |
+          .\Deployment\BuildEnv.ps1 -NETWORKING_PREFIX ${{ secrets.NETWORKING_PREFIX }} `
+            -BUILD_ENV ${{ needs.setup.outputs.build_env }} `
+            -RESOURCE_GROUP ${{ secrets.RESOURCE_GROUP }} `
+            -PREFIX ${{ secrets.PREFIX }} `
+            -GITHUB_REF ${{ github.ref }}"          
