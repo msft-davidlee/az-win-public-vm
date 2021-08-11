@@ -121,7 +121,7 @@ resource customscriptext 'Microsoft.Compute/virtualMachines/extensions@2021-04-0
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     protectedSettings: {
-      commandToExecute: loadTextContent('Custom.ps1')
+      commandToExecute: loadTextContent('Custom.cmd')
     }
   }
 }
