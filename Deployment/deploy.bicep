@@ -39,7 +39,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
         properties: {
           primary: true
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: publicip
+          publicIPAddress: {
+            id: publicip.id
+          }
           subnet: {
             id: subnetId
           }
@@ -56,6 +58,13 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-04-01' = {
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B2ms'
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: nic.id
+        }
+      ]
     }
     storageProfile: {
       imageReference: {
