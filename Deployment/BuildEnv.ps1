@@ -47,7 +47,7 @@ $deployOutput = $deployOutputText | ConvertFrom-Json
 $StackName = $deployOutput.properties.outputs.stackName.value
 $file = "Custom.ps1"
 
-$keys = az storage account keys list -g $StackName -n $StackName | ConvertFrom-Json
+$keys = az storage account keys list -g $rgName -n $StackName | ConvertFrom-Json
 if ($LastExitCode -ne 0) {
     throw "An error has occured with storage key lookup."
 }
