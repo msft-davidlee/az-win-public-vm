@@ -66,7 +66,7 @@ $settings = $settings.Replace("""", "'")
 $protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
 $protectedSettings = $protectedSettings.Replace("""", "'")
 
-az vm extension set -n CustomScriptExtension --publisher Microsoft.Compute --vm-name $StackName --resource-group $StackName `
+az vm extension set -n CustomScriptExtension --publisher Microsoft.Compute --vm-name $StackName --resource-group $rgName `
     --protected-settings $protectedSettings --settings $settings --force-update
 
 if ($LastExitCode -ne 0) {
