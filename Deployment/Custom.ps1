@@ -1,3 +1,5 @@
+param([string]$PubKeyFile,[string]$Username)
+
 $sshWinPath = "C:\Windows\system32\config\systemprofile\AppData\Local\Temp\"
 if (!(Test-Path $sshWinPath)) {
     New-Item -ItemType Directory -Force -Path $sshWinPath
@@ -24,3 +26,5 @@ if ($state -ne "Installed") {
 else {
     Write-Host "SSH already installed"
 }
+
+Set-Content -Path "C:\Users\$Username\.ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force

@@ -50,9 +50,11 @@ jobs:
       - id: buid-and-deploy
         name: Build Azure environment
         run: |
+          ${{ secrets.SSH_PUB_KEY }}>SSH_PUB_KEY.txt
           .\Deployment\BuildEnv.ps1 -NETWORKING_PREFIX ${{ secrets.NETWORKING_PREFIX }} `
             -BUILD_ENV ${{ needs.setup.outputs.build_env }} `
             -RESOURCE_GROUP ${{ secrets.RESOURCE_GROUP }} `
             -PREFIX ${{ secrets.PREFIX }} `
             -GITHUB_REF ${{ github.ref }} `
-            -VM_PASSWORD ${{ secrets.VM_PASSWORD }}
+            -VM_PASSWORD ${{ secrets.VM_PASSWORD }} `
+            -PUB_KEY_FILE SSH_PUB_KEY.txt

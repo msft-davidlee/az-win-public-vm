@@ -4,7 +4,8 @@ param(
     [string]$RESOURCE_GROUP, 
     [string]$PREFIX,
     [string]$GITHUB_REF,
-    [string]$VM_PASSWORD)
+    [string]$VM_PASSWORD,
+    [string]$PUB_KEY_FILE)
 
 $ErrorActionPreference = "Stop"
 
@@ -58,12 +59,18 @@ if ($LastExitCode -ne 0) {
     throw "An error has occured."
 }
 
+az storage blob upload -f $PUB_KEY_FILE -c $folderName -n $PUB_KEY_FILE --account-name $StackName --account-key $key1
+if ($LastExitCode -ne 0) {
+    throw "An error has occured."
+}
+
+$pubKeyLocation = "https://$StackName.blob.core.windows.net/$folderName/$PUB_KEY_FILE"
 $scriptLocation = "https://$StackName.blob.core.windows.net/$folderName/$file"
 
-$settings = @{ "fileUris" = @($scriptLocation); } | ConvertTo-Json -Compress
+$settings = @{ "fileUris" = @($scriptLocation, $pubKeyLocation); } | ConvertTo-Json -Compress
 $settings = $settings.Replace("""", "'")
 
-$protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
+$protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file -Username $StackName -PubKeyFile $PUB_KEY_FILE"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
 $protectedSettings = $protectedSettings.Replace("""", "'")
 
 az vm extension set -n CustomScriptExtension --publisher Microsoft.Compute --vm-name $StackName --resource-group $rgName `
