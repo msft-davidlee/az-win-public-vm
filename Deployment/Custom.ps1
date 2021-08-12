@@ -30,6 +30,15 @@ else {
 if (!(Test-Path "C:\Users\$Username\.ssh")) {
     New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force    
     Set-Content -Path "C:\Users\$Username\.ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
-    Set-Content -Path "C:\ProgramData\ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
+    Set-Content -Path "C:\ProgramData\ssh\administrators_authorized_keys" -Value (Get-Content $PubKeyFile) -Force
+
+    $acl = Get-Acl C:\ProgramData\ssh\administrators_authorized_keys
+    $acl.SetAccessRuleProtection($true, $false)
+    $administratorsRule = New-Object system.security.accesscontrol.filesystemaccessrule("Administrators", "FullControl", "Allow")
+    $systemRule = New-Object system.security.accesscontrol.filesystemaccessrule("SYSTEM", "FullControl", "Allow")
+    $acl.SetAccessRule($administratorsRule)
+    $acl.SetAccessRule($systemRule)
+    $acl | Set-Acl
+
     Restart-Service sshd
 }
