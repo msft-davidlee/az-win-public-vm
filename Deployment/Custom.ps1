@@ -27,8 +27,9 @@ else {
     Write-Host "SSH already installed"
 }
 
-if (!Test-Path "C:\Users\$Username\.ssh") {
-    New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force
+if (!(Test-Path "C:\Users\$Username\.ssh")) {
+    New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force    
 }
 
 Set-Content -Path "C:\Users\$Username\.ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
+Set-Content -Path "C:\ProgramData\ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
