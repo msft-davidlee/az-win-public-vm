@@ -128,7 +128,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
 }
 
 resource filesfolder 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
-  name: '${stackName}/${folderName}'
+  name: '${stackName}/default/${folderName}'
 }
 
 output stackName string = stackName
