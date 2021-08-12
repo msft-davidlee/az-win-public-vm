@@ -29,10 +29,18 @@ else {
 
 if (!(Test-Path "C:\Users\$Username\.ssh")) {
     New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force    
-    Set-Content -Path "C:\Users\$Username\.ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
-    Set-Content -Path "C:\ProgramData\ssh\administrators_authorized_keys" -Value (Get-Content $PubKeyFile) -Force
+    Copy-Item -Path $PubKeyFile -Destination "C:\Users\$Username\.ssh\authorized_keys" -Force
+    #Set-Content -Path "C:\Users\$Username\.ssh\authorized_keys" -Value (Get-Content $PubKeyFile) -Force
+    #Set-Content -Path "C:\ProgramData\ssh\administrators_authorized_keys" -Value (Get-Content $PubKeyFile) -Force
 
-    $acl = Get-Acl C:\ProgramData\ssh\administrators_authorized_keys
+    $content = Get-Content "C:\ProgramData\ssh\sshd_config"
+    $content = $content.Replace("#PasswordAuthentication yes","PasswordAuthentication no")
+    $content = $content.Replace("Match Group administrators","#Match Group administrators")
+    $content = $content.Replace("       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys","#       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys")
+
+    Set-Content -Path "C:\ProgramData\ssh\sshd_config" -Value $content
+
+    $acl = Get-Acl "C:\Users\$Username\.ssh\authorized_keys"
     $acl.SetAccessRuleProtection($true, $false)
     $administratorsRule = New-Object system.security.accesscontrol.filesystemaccessrule("Administrators", "FullControl", "Allow")
     $systemRule = New-Object system.security.accesscontrol.filesystemaccessrule("SYSTEM", "FullControl", "Allow")
