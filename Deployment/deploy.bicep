@@ -2,6 +2,7 @@ param prefix string
 param environment string
 param branch string
 param location string
+param folderName string
 param subnetId string
 @secure()
 param adminPassword string
@@ -111,17 +112,23 @@ resource antimalware 'Microsoft.Compute/virtualMachines/extensions@2021-04-01' =
   }
 }
 
-resource customscriptext 'Microsoft.Compute/virtualMachines/extensions@2021-04-01' = {
-  parent: vm
-  name: 'CustomScriptExtension'
+resource storage 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+  name: stackName
   location: location
+  tags: tags
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
   properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
-    autoUpgradeMinorVersion: true
-    protectedSettings: {
-      commandToExecute: loadTextContent('Custom.cmd')
-    }
+    allowBlobPublicAccess: false
+    accessTier: 'Hot'
+    supportsHttpsTrafficOnly: true
   }
 }
+
+resource filesfolder 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
+  name: '${stackName}/${folderName}'
+}
+
+output stackName string = stackName

@@ -3,7 +3,8 @@ param(
     [string]$BUILD_ENV, 
     [string]$RESOURCE_GROUP, 
     [string]$PREFIX,
-    [string]$GITHUB_REF)
+    [string]$GITHUB_REF,
+    [string]$VM_PASSWORD)
 
 $ErrorActionPreference = "Stop"
 
@@ -31,13 +32,43 @@ if (!$subnetId) {
     throw "Unable to find Subnet resource!"
 }
 
-$adminPassword = [guid]::NewGuid().ToString("N").Substring(0, 7).ToUpper() + "!" + [guid]::NewGuid().ToString("N").Substring(0, 7).ToLower()
-
+$folderName = "files"
 $rgName = "$RESOURCE_GROUP-$BUILD_ENV"
-az deployment group create --name $deploymentName --resource-group $rgName --template-file Deployment/deploy.bicep --parameters `
-    location=$location `
-    prefix=$PREFIX `
-    environment=$BUILD_ENV `
-    branch=$GITHUB_REF `
-    subnetId=$subnetId `
-    adminPassword=$adminPassword
+$deployOutputText = (az deployment group create --name $deploymentName --resource-group $rgName --template-file Deployment/deploy.bicep --parameters `
+        location=$location `
+        prefix=$PREFIX `
+        environment=$BUILD_ENV `
+        branch=$GITHUB_REF `
+        subnetId=$subnetId `
+        adminPassword="$VM_PASSWORD" `
+        folderName=$folderName)
+
+$deployOutput = $deployOutputText | ConvertFrom-Json
+$StackName = $deployOutput.properties.outputs.stackName.value
+$file = "Custom.ps1"
+
+$keys = az storage account keys list -g $StackName -n $StackName | ConvertFrom-Json
+if ($LastExitCode -ne 0) {
+    throw "An error has occured with storage key lookup."
+}
+$key1 = $keys[0].value
+
+az storage blob upload -f "Deployment\$file" -c $folderName -n $file --account-name $StackName --account-key $key1
+if ($LastExitCode -ne 0) {
+    throw "An error has occured."
+}
+
+$scriptLocation = "https://$StackName.blob.core.windows.net/$folderName/$file"
+
+$settings = @{ "fileUris" = @($scriptLocation); } | ConvertTo-Json -Compress
+$settings = $settings.Replace("""", "'")
+
+$protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
+$protectedSettings = $protectedSettings.Replace("""", "'")
+
+az vm extension set -n CustomScriptExtension --publisher Microsoft.Compute --vm-name $StackName --resource-group $StackName `
+    --protected-settings $protectedSettings --settings $settings --force-update
+
+if ($LastExitCode -ne 0) {
+    throw "An error has occured."
+}
