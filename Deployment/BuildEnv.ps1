@@ -33,7 +33,7 @@ if (!$subnetId) {
     throw "Unable to find Subnet resource!"
 }
 
-$asgId = (az resource list --name 'ssh-asg' --query [].id | ConvertFrom-Json).ToString()
+$asgId = (az resource list --name 'ssh-asg' -g $vnetRg --query [].id | ConvertFrom-Json).ToString()
 
 $folderName = "files"
 $rgName = "$RESOURCE_GROUP-$BUILD_ENV"
