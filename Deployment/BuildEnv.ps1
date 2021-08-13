@@ -46,6 +46,7 @@ $deployOutputText = (az deployment group create --name $deploymentName --resourc
 
 $deployOutput = $deployOutputText | ConvertFrom-Json
 $StackName = $deployOutput.properties.outputs.stackName.value
+$Username =  $deployOutput.properties.outputs.username.value
 $file = "Custom.ps1"
 
 $keys = az storage account keys list -g $rgName -n $StackName | ConvertFrom-Json
@@ -70,7 +71,7 @@ $scriptLocation = "https://$StackName.blob.core.windows.net/$folderName/$file"
 $settings = @{ "fileUris" = @($scriptLocation, $pubKeyLocation); } | ConvertTo-Json -Compress
 $settings = $settings.Replace("""", "'")
 
-$protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file -Username $StackName -PubKeyFile $PUB_KEY_FILE"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
+$protectedSettings = @{"commandToExecute" = "powershell -ExecutionPolicy Unrestricted -File $file -Username $Username -PubKeyFile $PUB_KEY_FILE"; "storageAccountName" = $StackName; "storageAccountKey" = $key1 } | ConvertTo-Json -Compress
 $protectedSettings = $protectedSettings.Replace("""", "'")
 
 az vm extension set -n CustomScriptExtension --publisher Microsoft.Compute --vm-name $StackName --resource-group $rgName `

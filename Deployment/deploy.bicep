@@ -84,7 +84,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-04-01' = {
     }
     osProfile: {
       computerName: stackName
-      adminUsername: stackName
+      adminUsername: 'devuser1'
       adminPassword: adminPassword
     }
   }
@@ -135,3 +135,4 @@ resource filesfolder 'Microsoft.Storage/storageAccounts/blobServices/containers@
 }
 
 output stackName string = stackName
+output username string = vm.properties.osProfile.adminUsername
