@@ -33,6 +33,8 @@ if (!$subnetId) {
     throw "Unable to find Subnet resource!"
 }
 
+$asgId = (az resource list --name 'ssh-asg' --query [].id | ConvertFrom-Json).ToString()
+
 $folderName = "files"
 $rgName = "$RESOURCE_GROUP-$BUILD_ENV"
 $deployOutputText = (az deployment group create --name $deploymentName --resource-group $rgName --template-file Deployment/deploy.bicep --parameters `
@@ -43,7 +45,7 @@ $deployOutputText = (az deployment group create --name $deploymentName --resourc
         subnetId=$subnetId `
         adminPassword="$VM_PASSWORD" `
         folderName=$folderName `
-        asgResourceGroupName=$vnet.resourceGroup)
+        asgId=$asgId)
 
 $deployOutput = $deployOutputText | ConvertFrom-Json
 $StackName = $deployOutput.properties.outputs.stackName.value
