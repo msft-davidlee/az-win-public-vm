@@ -19,17 +19,20 @@ catch {
 if ($state -ne "Installed") {
     Write-Host "Installing SSH"
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-      
+    Set-Service -Name sshd -StartupType 'Automatic'
+    Start-Service sshd
     New-NetFirewallRule -Name sshd -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+    Stop-Service sshd
 
-    New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force    
-    Copy-Item -Path $PubKeyFile -Destination "C:\Users\$Username\.ssh\authorized_keys" -Force
+    #New-Item -Path "C:\Users\$Username\.ssh" -ItemType Directory -Force    
+    #Copy-Item -Path $PubKeyFile -Destination "C:\Users\$Username\.ssh\authorized_keys" -Force
+    Copy-Item -Path $PubKeyFile -Destination "C:\ProgramData\ssh\administrators_authorized_keys" -Force
 
     $content = Get-Content "C:\ProgramData\ssh\sshd_config"
     $content = $content.Replace("#PubkeyAuthentication yes", "PubkeyAuthentication yes")
     $content = $content.Replace("#PasswordAuthentication yes", "PasswordAuthentication no")
-    $content = $content.Replace("Match Group administrators", "#Match Group administrators")
-    $content = $content.Replace("       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys", "#       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys")
+    #$content = $content.Replace("Match Group administrators", "#Match Group administrators")
+    #$content = $content.Replace("       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys", "#       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys")
 
     Set-Content -Path "C:\ProgramData\ssh\sshd_config" -Value $content
 
@@ -40,7 +43,6 @@ if ($state -ne "Installed") {
     # $acl.SetAccessRule($administratorsRule)
     # $acl.SetAccessRule($systemRule)
     # $acl | Set-Acl
-    Set-Service -Name sshd -StartupType 'Automatic'
     Start-Service sshd
 }
 else {
