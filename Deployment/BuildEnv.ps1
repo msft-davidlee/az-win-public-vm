@@ -42,11 +42,12 @@ $deployOutputText = (az deployment group create --name $deploymentName --resourc
         branch=$GITHUB_REF `
         subnetId=$subnetId `
         adminPassword="$VM_PASSWORD" `
-        folderName=$folderName)
+        folderName=$folderName `
+        asgResourceGroupName=$vnet.resourceGroup)
 
 $deployOutput = $deployOutputText | ConvertFrom-Json
 $StackName = $deployOutput.properties.outputs.stackName.value
-$Username =  $deployOutput.properties.outputs.username.value
+$Username = $deployOutput.properties.outputs.username.value
 $file = "Custom.ps1"
 
 $keys = az storage account keys list -g $rgName -n $StackName | ConvertFrom-Json

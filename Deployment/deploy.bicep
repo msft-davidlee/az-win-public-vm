@@ -6,6 +6,7 @@ param folderName string
 param subnetId string
 @secure()
 param adminPassword string
+param asgResourceGroupName string
 
 var stackName = '${prefix}${environment}'
 var tags = {
@@ -48,7 +49,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
           }
           applicationSecurityGroups: [
             {
-              id: resourceId('Microsoft.Network/applicationSecurityGroups', 'ssh-asg')
+              id: resourceId(asgResourceGroupName, 'Microsoft.Network/applicationSecurityGroups', 'ssh-asg')
             }
           ]
         }
