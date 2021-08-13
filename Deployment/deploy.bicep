@@ -46,6 +46,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
           subnet: {
             id: subnetId
           }
+          applicationSecurityGroups: [
+            {
+              id: resourceId('Microsoft.Network/applicationSecurityGroups', 'ssh-asg')
+            }
+          ]
         }
       }
     ]
